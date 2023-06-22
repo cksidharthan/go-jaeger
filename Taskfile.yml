@@ -1,0 +1,74 @@
+version: 3
+
+
+tasks:
+  dev-setup:
+    desc: "Setup development environment"
+    cmds:
+      - go install golang.org/x/tools/cmd/goimports@latest
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.0
+      - go install github.com/nikolaydubina/go-cover-treemap@latest
+
+  deps:
+    desc: "Dependencies Check"
+    cmds:
+      - go mod download
+      - go mod tidy
+      - go mod verify
+      - go mod vendor
+
+  fmt:
+    desc: "Format Check"
+    cmds:
+      - goimports -w -e $(find . -type f -name '*.go' -not -path "*/vendor/*")
+
+  lint:
+    desc: "Lint Check"
+    cmds:
+      - golangci-lint run --fix
+      - go vet ./...
+
+  test:
+    desc: "Running unit Tests"
+    cmds:
+      - go test -coverprofile cover.out ./pkg/...
+      - go tool cover -html=cover.out -o cover.html
+      - go-cover-treemap -coverprofile cover.out > assets/cover-treemap.svg
+
+  run-jaeger:
+    desc: "Run Jaeger"
+    cmds:
+      - docker run -d --name jaeger -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 -p 5775:5775/udp -p 6831:6831/udp -p 6832:6832/udp -p 5778:5778 -p 16686:16686 -p 14268:14268 -p 9411:9411 jaegertracing/all-in-one:latest
+
+  stop-jaeger:
+    desc: "Stop Jaeger"
+    cmds:
+      - docker stop jaeger
+
+  run-example:
+    desc: "Run example"
+    cmds:
+      - go run example/main.go
+
+  open-jaeger-ui:
+    desc: "Open Jaeger UI"
+    cmds:
+      - open http://localhost:16686
+
+  dc-up:
+    desc: "Start docker-compose"
+    cmds:
+      - docker-compose up -d -f deploy/docker-compose/docker-compose.yml
+
+  dc-down:
+    desc: "Stop docker-compose"
+    cmds:
+      - docker-compose down -f deploy/docker-compose/docker-compose.yml
+
+  pr-check:
+    desc: "Run all checks"
+    cmds:
+      - task: deps
+      - task: fmt
+      - task: lint
+      - task: test
