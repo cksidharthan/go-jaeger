@@ -1,5 +1,5 @@
 # go-tracer
-Tracing library for Go applications using OpenTracing. This library hooks into the logrus library.
+Tracing library for Go applications using OpenTelemetry. This library hooks into the logrus library.
 
 ## Usage
 Please see the [examples](https://github.com/cksidharthan/go-jaeger/blob/main/example/example.go) directory for usage examples.
